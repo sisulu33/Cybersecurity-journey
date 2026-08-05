@@ -84,12 +84,5 @@ Sensitive information should be protected using proper permissions, least privil
 
 ---
 
-# Biggest Lessons from Levels 18–22
-
-- **Level 18:** Shell restrictions can often be bypassed if command execution is still allowed.
-- **Level 19:** The **setuid** bit allows controlled privilege elevation but becomes dangerous if the program is vulnerable.
-- **Level 20:** Understanding **clients, listeners, and TCP communication** is essential for networking and penetration testing.
-- **Level 21:** **Cron jobs** automate tasks and are common places to investigate for privilege escalation and persistence.
-- **Level 22:** Reading and understanding **script logic** is often more effective than trial-and-error. Knowing *why* a script works is more valuable than simply running it.
 
 
