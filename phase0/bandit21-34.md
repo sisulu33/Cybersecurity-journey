@@ -322,4 +322,228 @@ This is why scheduled tasks, cron jobs, and systemd timers are common targets du
 - Saw a realistic example of Linux privilege escalation through scheduled task execution.
 - Reinforced the principle that understanding *how* a system works is more valuable than memorizing commands.
 
+# Level 24 → 25 — Brute-Forcing a PIN
+
+## Objective
+
+Authenticate to a service that requires the current password and an unknown 4-digit PIN.
+
+---
+
+## Concept
+
+This level demonstrates a **brute-force attack**.
+
+The password was already known, but the PIN was not. Since the PIN was only four digits long (0000–9999), it was feasible to automate every possible attempt.
+
+---
+
+## Steps
+
+### 1. Read the current password
+
+```bash
+password=$(cat /etc/bandit_pass/bandit24)
+```
+
+### 2. Generate every possible 4-digit PIN
+
+```bash
+seq -w 0 9999
+```
+
+The `-w` option pads numbers with leading zeros so every PIN is exactly four digits.
+
+Example:
+
+```text
+0000
+0001
+...
+9999
+```
+
+### 3. Create all password/PIN combinations
+
+```bash
+for pin in $(seq -w 0 9999); do
+    echo "$password $pin"
+done > combinations.txt
+```
+
+### 4. Send every attempt to the service
+
+```bash
+nc localhost 30002 < combinations.txt
+```
+
+The server checks each line until it finds the correct PIN, then returns the next password.
+
+---
+
+## What I Learned
+
+- How shell loops automate repetitive tasks.
+- How `seq -w` generates fixed-width numbers.
+- How `nc` streams input directly to a TCP service.
+- Why short secrets are vulnerable to brute-force attacks.
+
+---
+
+## Security Lesson
+
+A 4-digit PIN provides only 10,000 possible combinations. Without protections such as rate limiting, account lockouts, or multi-factor authentication, brute-force attacks become practical.
+
+---
+
+# Level 25 → 26 — Restricted Login Shells and Shell Escapes
+
+## Objective
+
+Gain access to a shell even though the user's login shell is not Bash.
+
+---
+
+## Concept
+
+Linux users are not required to use `/bin/bash` as their login shell. The login shell can be **any executable**.
+
+In this level, `bandit26` used a custom program instead of Bash. The program displayed a file using `more` and then exited, preventing a normal interactive shell.
+
+The solution was to exploit a **shell escape** feature provided by `more`.
+
+---
+
+## Attack Flow
+
+```text
+SSH Login
+      │
+      ▼
+Custom Login Shell
+      │
+      ▼
+more
+      │
+      ▼
+Shell Escape
+      │
+      ▼
+Interactive Shell
+```
+
+---
+
+## What I Learned
+
+- Every Linux user has a login shell defined in `/etc/passwd`.
+- Programs such as `more`, `less`, and `vim` may provide shell escape functionality.
+- Restricted shells are not always secure if the allowed program can launch a shell.
+
+---
+
+## Security Lesson
+
+Replacing Bash with another program is not sufficient security. If the replacement program allows command execution or shell escapes, users may bypass the restriction completely.
+
+---
+
+# Level 26 → 27 — Privilege Escalation with setuid
+
+## Objective
+
+Use the `bandit27-do` binary to execute a command with the permissions of another user.
+
+---
+
+## Concept
+
+The `bandit27-do` binary has the **setuid** bit enabled.
+
+When executed, it runs with the permissions of its owner (`bandit27`) rather than the user who launched it (`bandit26`).
+
+This allows controlled privilege elevation.
+
+---
+
+## Command
+
+```bash
+./bandit27-do cat /etc/bandit_pass/bandit27
+```
+
+---
+
+## What I Learned
+
+- The **setuid** bit changes a program's effective user ID.
+- Programs can temporarily execute with another user's permissions.
+- This mechanism enables legitimate administrative tasks but also presents security risks.
+
+---
+
+## Why is setuid dangerous?
+
+If a privileged setuid program contains a vulnerability, an attacker may exploit it to execute arbitrary commands with elevated privileges.
+
+Misconfigured or vulnerable setuid binaries are a common source of privilege escalation.
+
+---
+
+## Security Lesson
+
+Only trusted and carefully audited programs should use the setuid bit. The principle of least privilege should always be followed.
+
+---
+
+# Level 27 → 28 — Cloning a Git Repository
+
+## Objective
+
+Clone a Git repository over SSH and retrieve the password stored within it.
+
+---
+
+## Concept
+
+This level introduces **Git** as a version control system.
+
+Instead of searching the filesystem, the password is stored in a remote Git repository. The task is to authenticate over SSH, clone the repository, and inspect its contents.
+
+---
+
+## Commands
+
+Clone the repository:
+
+```bash
+git clone ssh://bandit27-git@localhost:2220/home/bandit27-git/repo
+```
+
+Navigate into the repository:
+
+```bash
+cd repo
+```
+
+View the files:
+
+```bash
+ls
+cat README
+```
+
+---
+
+## What I Learned
+
+- How to clone a Git repository using SSH.
+- Git repositories contain a working copy of tracked files.
+- SSH keys and Git authentication work together to provide secure access.
+
+---
+
+## Security Lesson
+
+Sensitive information should never be committed to source control. Even if removed later, Git preserves historical versions, making accidental secret exposure a significant security risk.
 
