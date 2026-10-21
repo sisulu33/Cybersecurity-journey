@@ -12,7 +12,7 @@ Captures were trimmed with tshark to the relevant conversation before publishing
 | 2 | server to client | SYN, ACK (ECE: ECN accepted) | 17.332 ms |
 | 3 | client to server | ACK | 0.220 ms |
 
-**My explanation:** (states on each side, and why three steps, not two)
+**My explanation:** 
 
 Before the connection, the server is in LISTEN state and the client has no state. When the client sends the SYN, it moves to SYN_SENT. The server receives it and moves to SYN_RECEIVED, and replies with SYN_ACK. When the client receives the SYN-ACK it replies with an ACK and moves into an ESTABLISHED state. The server moves to established and when the ACK arrives.
 
@@ -42,7 +42,7 @@ Failed connection to 34.223.124.45:80, same client port (61360) throughout, no S
 
 Observation: five retries at a flat 1 s, then the gap doubles each time.
 
-**My explanation:** (what RTO is, why TCP retransmits, the initial RTO default, why the wait doubles, and why this capture does not match the textbook exactly)
+**My explanation:** 
 
 The RTO is how long the TCP waits for an acknowledgement before sendoing the packet again.A packet can be lost and tcp has to recover without help from the application. For a SYN,TCP has no measured round-trip time to base the timeout on so it uses an initial default.
 
@@ -52,7 +52,7 @@ My data shows the doubling: 2, 4, 8, 16, then 32 seconds. The whole attempt span
 
 ## 3. Reading Wireshark
 
-**My explanation:** (the three panes, display filters vs capture filters, with examples I used)
+**My explanation:** 
 
 The packet list (top) has one row per packet, with time, source, destination, protocol and a summary. The packet details pane (middle) is a collapsible tree of the selected packet, one section per protocol layer. The packet bytes pane (bottom) shows the raw hex and ASCII. Clicking a field in the middle pane highlights its bytes in the bottom pane.
 
@@ -63,7 +63,7 @@ Capture filters and display filters use different languages and apply at differe
 Follow TCP Stream on the example.com connection: 75 bytes sent, 1037 bytes received, all readable.
 Visible: Host, path, User-Agent (curl/8.16.0), the server's headers (Cloudflare, cache status) and the full HTML body.
 
-**My explanation:** (what an observer on the path can see and what that means for real logins)
+**My explanation:** 
 
 Follow TCP stream reassembles the packets of one connection into the conversation into the conversation. Mine showed 75 bytes sent and 1037 bytes received, all readable. Anyone who can see the treaffic, such as someone on the same hotspot or the isp or a router in between, can read the same thing: the site, the path, the tool used(curl/8.16.0) the server's headers and the whole page.
 
@@ -71,7 +71,7 @@ Nothing sensitive leaked here because example.com has no login. On a site that u
 
 ## 5. SYN flood
 
-**My explanation:** (how it works, what resource it exhausts, why spoofed addresses make it hard to defend, and how it relates to the failed-connection capture)
+**My explanation:** 
 
 A server that receives a SYN allocates a small amount of memory for. the half-open connection and waits, in SYN_RECEIVED, for the final ACK. That memory is limited. A SYN flood sends huge numbers of SYNs and never completes the handshake which fills the queue so real clients get refused.
 
@@ -87,7 +87,7 @@ Attackers usually spoof the source addresses. Then the SYN-ACKs go to innocent h
 | Transaction ID | 0x6551 |
 | Answer | 104.20.23.154, 172.66.147.243 |
 
-**My explanation:** (why no handshake, what UDP trades away, the metadata problem, the poisoning problem)
+**My explanation:** 
 
 DNS lookups are usually one small question and one small answer,so a three-packet setup would cost more than the lookup itself. Yours was two packets and took 75.8 ms in total.
 
